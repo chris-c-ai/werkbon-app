@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actum — WerkbonPro</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2A4A5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WerkbonPro">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --actum-blue:#3D6E8A;--actum-dark:#2A4A5E;--actum-light:#EEF4F7;
+  --bg:#F7F8FA;--surface:#FFFFFF;--border:#E4E7EB;--border2:#CDD2D8;
+  --text:#1A2332;--muted:#5A6475;--faint:#9BA3AE;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;
+  --amber:#854F0B;--amber-bg:#FAEEDA;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+.hidden{display:none!important;}
+
+/* SIDEBAR */
+.app-shell{display:flex;min-height:100vh;}
+.sidebar{width:240px;min-height:100vh;background:var(--actum-dark);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:10;box-shadow:2px 0 12px rgba(0,0,0,.15);}
+.sb-logo-wrap{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-logo-img{width:100%;max-width:160px;height:auto;display:block;}
+.sb-logo-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:6px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;}
+.sb-nav{padding:12px 10px;flex:1;}
+.nav-section{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em;padding:10px 12px 4px;font-weight:600;}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;color:rgba(255,255,255,.65);border:none;background:none;width:100%;text-align:left;font-family:var(--font);transition:all .15s;font-weight:400;}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.95);}
+.nav-btn.active{background:rgba(255,255,255,.15);color:#fff;font-weight:500;}
+.nav-icon{width:18px;text-align:center;font-size:14px;opacity:.8;}
+.sb-user{padding:14px 20px;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.1);}
+.sb-user-name{font-size:13px;font-weight:600;color:#fff;}
+.sb-user-role{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;text-transform:capitalize;}
+.logout-btn{margin-top:8px;font-size:12px;color:rgba(255,255,255,.35);background:none;border:none;cursor:pointer;font-family:var(--font);padding:0;display:flex;align-items:center;gap:4px;}
+.logout-btn:hover{color:rgba(255,255,255,.7);}
+
+/* MAIN */
+.main{flex:1;margin-left:240px;overflow-y:auto;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text);}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+.page-content{padding:28px 32px 48px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);}
+.card-pad{padding:22px 24px;}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:11px 16px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--bg);}
+td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr.clickable:hover td{background:var(--actum-light);cursor:pointer;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.02em;}
+.badge-open{background:#FEF3C7;color:#92400E;}
+.badge-uitvoering{background:#DBEAFE;color:#1E40AF;}
+.badge-afgerond{background:#D1FAE5;color:#065F46;}
+.badge-actief{background:#D1FAE5;color:#065F46;}
+.badge-inactief{background:#F3F4F6;color:#6B7280;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;white-space:nowrap;}
+.btn-primary{background:var(--actum-blue);color:#fff;box-shadow:0 1px 3px rgba(61,110,138,.3);}
+.btn-primary:hover{background:var(--actum-dark);}
+.btn-ghost{background:none;border:1px solid var(--border2);color:var(--text);}
+.btn-ghost:hover{background:var(--bg);border-color:var(--actum-blue);color:var(--actum-blue);}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #F7C1C1;}
+.btn-danger:hover{background:#F8D7D7;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr;}
+.form-grid.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;font-weight:500;color:var(--muted);}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 12px;font-size:13px;color:var(--text);font-family:var(--font);transition:all .15s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--actum-blue);box-shadow:0 0 0 3px rgba(61,110,138,.12);}
+.field textarea{resize:vertical;min-height:80px;}
+
+/* WERKZAAMHEDEN */
+.wz-head{display:grid;grid-template-columns:1fr 180px 80px 100px 36px;gap:8px;padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:8px;}
+.wz-head span{font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.wz-row{display:grid;grid-template-columns:1fr 180px 80px 100px 36px;gap:8px;align-items:center;margin-bottom:6px;}
+.wz-row input,.wz-row select{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:13px;color:var(--text);font-family:var(--font);width:100%;transition:all .15s;}
+.wz-row input:focus,.wz-row select:focus{outline:none;border-color:var(--actum-blue);}
+.btn-del-row{background:none;border:1px solid var(--border);border-radius:var(--radius);width:32px;height:32px;cursor:pointer;color:var(--faint);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
+.btn-del-row:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+.btn-add-row{background:none;border:1px dashed var(--actum-blue);border-radius:var(--radius);padding:8px 14px;font-size:12px;color:var(--actum-blue);cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-family:var(--font);transition:all .15s;}
+.btn-add-row:hover{background:var(--actum-light);}
+
+/* TOTALEN */
+.totalen-box{background:var(--actum-light);border:1px solid rgba(61,110,138,.2);border-radius:var(--radius);padding:16px 18px;margin-top:12px;}
+.totalen-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.totalen-row.grand{font-weight:700;font-size:16px;border-top:2px solid rgba(61,110,138,.2);margin-top:8px;padding-top:10px;font-family:var(--mono);color:var(--actum-dark);}
+
+/* TABS */
+.tabs{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
+.tab-btn{flex:1;text-align:center;padding:10px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--muted);font-family:var(--font);transition:all .15s;font-weight:500;border-right:1px solid var(--border);}
+.tab-btn:last-child{border-right:none;}
+.tab-btn.active{background:var(--actum-blue);color:#fff;}
+.tab-btn:hover:not(.active){background:var(--actum-light);color:var(--actum-blue);}
+
+/* STATUS */
+.status-btns{display:flex;gap:10px;}
+.status-btn{flex:1;padding:10px;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);cursor:pointer;font-size:13px;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);transition:all .15s;font-weight:500;}
+.status-btn.sel-open{background:#FEF3C7;color:#92400E;border-color:#F59E0B;}
+.status-btn.sel-in_uitvoering{background:#DBEAFE;color:#1E40AF;border-color:#3B82F6;}
+.status-btn.sel-afgerond{background:#D1FAE5;color:#065F46;border-color:#10B981;}
+
+/* HANDTEKENING */
+.sig-wrap{border:1.5px solid var(--border2);border-radius:var(--radius);overflow:hidden;background:#fff;box-shadow:inset 0 1px 4px rgba(0,0,0,.04);}
+#sig-canvas{display:block;cursor:crosshair;touch-action:none;width:100%;}
+.sig-actions{display:flex;align-items:center;padding:10px 14px;border-top:1px solid var(--border);gap:10px;background:var(--bg);}
+.sig-status{flex:1;font-size:12px;color:var(--muted);}
+.sig-ok{color:var(--teal);font-weight:500;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--actum-dark) 0%,var(--actum-blue) 100%);}
+.login-card{background:#fff;border-radius:16px;padding:44px 40px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.login-logo-img{width:180px;margin:0 auto 24px;display:block;}
+.login-divider{height:1px;background:var(--border);margin:0 0 24px;}
+.login-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.error-box{background:var(--red-bg);color:var(--red);border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-bottom:14px;border:1px solid #F7C1C1;}
+
+/* DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:flex;justify-content:flex-end;backdrop-filter:blur(2px);}
+.drawer{width:540px;background:var(--surface);height:100vh;overflow-y:auto;padding:28px;box-shadow:-8px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:20px;}
+.drawer-header{display:flex;align-items:flex-start;justify-content:space-between;}
+.drawer-title{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
+.drawer-close{background:none;border:1px solid var(--border2);border-radius:var(--radius);width:34px;height:34px;cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.drawer-close:hover{border-color:var(--red);color:var(--red);}
+
+/* FILTERS */
+.toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.filter-input{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 14px;font-size:13px;color:var(--text);font-family:var(--font);flex:1;min-width:200px;transition:all .15s;}
+.filter-input:focus{outline:none;border-color:var(--actum-blue);}
+.filter-select{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--font);cursor:pointer;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--actum-blue);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
+.stat-val{font-size:30px;font-weight:700;letter-spacing:-.8px;margin-top:6px;font-family:var(--mono);}
+
+/* TARIEVEN */
+.tarief-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.tarief-kaart{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;transition:all .2s;position:relative;overflow:hidden;}
+.tarief-kaart::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--actum-blue);}
+.tarief-kaart:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.tarief-kaart-naam{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.tarief-kaart-prijs{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--actum-blue);margin-bottom:4px;}
+.tarief-kaart-desc{font-size:12px;color:var(--muted);margin-bottom:14px;min-height:16px;}
+.tarief-kaart-actions{display:flex;gap:6px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:30px;width:460px;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:22px;color:var(--text);}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
+
+.section-gap{display:flex;flex-direction:column;gap:18px;}
+.action-row{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn .2s ease;}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.slide-in{animation:slideIn .2s ease;}
+/* HAMBURGER MENU */
+.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:50;background:var(--actum-dark);border:none;border-radius:8px;width:42px;height:42px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all .3s;}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;backdrop-filter:blur(2px);}
+.sidebar-overlay.show{display:block;}
+
+@media(max-width:900px){
+  .hamburger{display:flex;}
+  .sidebar{width:260px;transform:translateX(-100%);transition:transform .3s ease;position:fixed;z-index:20;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .topbar{padding-left:64px;}
+  .page-content{padding:20px 16px 40px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .tarief-grid{grid-template-columns:1fr 1fr;}
+  .wz-head,.wz-row{grid-template-columns:1fr 80px 36px;}
+  .drawer{width:100%;}
+  .form-grid.three{grid-template-columns:1fr 1fr;}
+  table th:nth-child(4),table td:nth-child(4){display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<!-- HAMBURGER -->
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div id="login-screen" class="login-wrap fade-in">
+  <div class="login-card">
+    <img src="data:image/png;base64,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" class="login-logo-img" alt="Actum logo">
+    <div class="login-divider"></div>
+    <div class="login-title">Aanmelden</div>
+    <div class="login-sub">Digitale werkbonnen — Actum Industrial Services</div>
+    <div id="login-error" class="error-box hidden"></div>
+    <div class="field" style="margin-bottom:12px">
+      <label>E-mailadres</label>
+      <input type="email" id="login-email" placeholder="naam@actum.be">
+    </div>
+    <div class="field" style="margin-bottom:22px">
+      <label>Wachtwoord</label>
+      <input type="password" id="login-ww" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" id="login-btn" style="width:100%;justify-content:center;padding:11px" onclick="try{doLogin();}catch(e){alert('JS Fout: '+e.message);}">Aanmelden</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="app-shell hidden">
+  <aside class="sidebar">
+    <div class="sb-logo-wrap">
+      <img src="data:image/png;base64,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" class="sb-logo-img" alt="Actum">
+      <div class="sb-logo-sub">Werkbon Systeem</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-section">Beheer</div>
+      <button class="nav-btn active" id="nav-werkbonnen" onclick="showPage('werkbonnen')">
+        <span class="nav-icon">📋</span> Werkbonnen
+      </button>
+      <button class="nav-btn hidden" id="nav-dashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-btn hidden" id="nav-tarieven" onclick="showPage('tarieven')">
+        <span class="nav-icon">💶</span> Tarieven
+      </button>
+      <button class="nav-btn hidden" id="nav-gebruikers" onclick="showPage('gebruikers')">
+        <span class="nav-icon">👥</span> Gebruikers
+      </button>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-user-name" id="sb-naam">—</div>
+      <div class="sb-user-role" id="sb-rol-txt">—</div>
+      <button class="logout-btn" onclick="doLogout()">↩ Afmelden</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- WERKBONNEN -->
+    <div id="page-werkbonnen">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title" id="wb-title">Werkbonnen</div>
+          <div class="topbar-sub" id="wb-sub"></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNieuwForm()">+ Nieuwe werkbon</button>
+      </div>
+      <div class="page-content">
+        <div class="toolbar">
+          <input class="filter-input" id="zoek-input" placeholder="🔍  Zoeken op nummer of klant…" oninput="renderLijst()">
+          <select class="filter-select" id="filter-status" onchange="renderLijst()">
+            <option value="alle">Alle statussen</option>
+            <option value="open">Open</option>
+            <option value="in_uitvoering">In uitvoering</option>
+            <option value="afgerond">Afgerond</option>
+          </select>
+          <span id="wb-count" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+        </div>
+        <div class="card"><div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Bonnummer</th><th>Klant</th><th>Datum</th>
+              <th id="th-technicus" class="hidden">Technicus</th>
+              <th>Status</th><th style="text-align:right">Bedrag (incl. btw)</th><th></th>
+            </tr></thead>
+            <tbody id="wb-tbody"></tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- NIEUWE WERKBON -->
+    <div id="page-nieuw" class="hidden">
+      <div class="topbar">
+        <div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn btn-ghost btn-sm" onclick="showPage('werkbonnen')">← Terug</button>
+            <div class="topbar-title">Nieuwe werkbon</div>
+          </div>
+          <div class="topbar-sub">Vul alle gegevens in en laat de klant ondertekenen</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showTab(0)">1. Klantgegevens</button>
+          <button class="tab-btn" onclick="showTab(1)">2. Werkzaamheden</button>
+          <button class="tab-btn" onclick="showTab(2)">3. Handtekening</button>
+        </div>
+        <div id="tab-0" class="section-gap">
+          <div class="card card-pad">
+            <div class="card-title">📄 Bongegevens</div>
+            <div class="form-grid three">
+              <div class="field"><label>Datum</label><input type="date" id="f-datum"></div>
+              <div class="field"><label>Status</label>
+                <select id="f-status">
+                  <option value="open">Open</option>
+                  <option value="in_uitvoering">In uitvoering</option>
+                  <option value="afgerond">Afgerond</option>
+                </select>
+              </div>
+              <div class="field"><label>Technicus</label><input type="text" id="f-technicus" readonly style="background:#F3F4F6;color:var(--muted)"></div>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">🏢 Klantgegevens</div>
+            <div class="form-grid">
+              <div class="field"><label>Bedrijfsnaam *</label><input type="text" id="f-bedrijf" placeholder="Bedrijf NV"></div>
+              <div class="field"><label>Contactpersoon</label><input type="text" id="f-contact" placeholder="Jan Janssen"></div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label>E-mail</label><input type="email" id="f-email" placeholder="jan@bedrijf.be"></div>
+              <div class="field"><label>Telefoon</label><input type="text" id="f-tel" placeholder="+32 499 00 00 00"></div>
+            </div>
+            <div class="form-grid full">
+              <div class="field"><label>Adres</label><input type="text" id="f-adres" placeholder="Straat 1, 1000 Brussel"></div>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">📝 Probleemomschrijving</div>
+            <div class="field"><textarea id="f-probleem" placeholder="Beschrijf het probleem of de opdracht…"></textarea></div>
+          </div>
+          <div class="action-row"><button class="btn btn-primary" onclick="showTab(1)">Volgende: werkzaamheden →</button></div>
+        </div>
+
+        <div id="tab-1" class="section-gap hidden">
+          <div class="card card-pad">
+            <div class="card-title">⏱️ Tijdregistratie — tot 7 dagen</div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;min-width:600px">
+                <thead>
+                  <tr>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:left">Datum</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:left">Omschrijving</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:center">Start</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:center">Stop</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:center">Pauze (min)</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:center">Uren</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:left">Tarief</th>
+                    <th style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);text-align:right">Bedrag</th>
+                  </tr>
+                </thead>
+                <tbody id="dag-tbody"></tbody>
+              </table>
+            </div>
+            <button class="btn-add-row" onclick="addDagRij()" id="btn-add-dag">+ Dag toevoegen</button>
+            <div class="totalen-box" style="margin-top:12px">
+              <div class="totalen-row"><span style="color:var(--muted)">Totaal uren</span><span id="tot-uren" style="font-family:var(--mono)">0,00 u</span></div>
+              <div class="totalen-row"><span style="color:var(--muted)">Subtotaal excl. btw</span><span id="tot-excl" style="font-family:var(--mono)">€ 0,00</span></div>
+              <div class="totalen-row"><span style="color:var(--muted)">Btw 21%</span><span id="tot-btw" style="font-family:var(--mono)">€ 0,00</span></div>
+              <div class="totalen-row grand"><span>Totaal incl. btw</span><span id="tot-incl">€ 0,00</span></div>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">📦 Gebruikte materialen</div>
+            <div class="field"><textarea id="f-materialen" placeholder="Lijst van gebruikte onderdelen en materialen…"></textarea></div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-ghost" onclick="showTab(0)">← Vorige</button>
+            <button class="btn btn-primary" onclick="showTab(2)">Volgende: handtekening →</button>
+          </div>
+        </div>
+
+        <div id="tab-2" class="section-gap hidden">
+          <div class="card card-pad" id="locatie-card">
+            <div class="card-title">📍 Locatie</div>
+            <div id="locatie-status" style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px">
+              <span id="locatie-tekst">Locatie wordt bepaald…</span>
+              <button class="btn btn-ghost btn-sm" onclick="bepaalLocatie()">↻ Vernieuwen</button>
+            </div>
+            <div id="locatie-detail" class="hidden" style="margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">✅ Status werkbon</div>
+            <div class="status-btns">
+              <button class="status-btn" id="sb-open" onclick="setStatus('open')">⏳ Open</button>
+              <button class="status-btn" id="sb-in_uitvoering" onclick="setStatus('in_uitvoering')">⚙️ In uitvoering</button>
+              <button class="status-btn sel-afgerond" id="sb-afgerond" onclick="setStatus('afgerond')">✓ Afgerond</button>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">✍️ Handtekening klant</div>
+            <div class="sig-wrap"><canvas id="sig-canvas" height="180"></canvas></div>
+            <div class="sig-actions">
+              <span class="sig-status" id="sig-status-txt">Teken hieronder ter bevestiging van de uitgevoerde werken</span>
+              <button class="btn btn-ghost btn-sm" onclick="clearSig()">Wissen</button>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">💬 Opmerkingen klant</div>
+            <div class="field"><textarea id="f-opmerkingen" placeholder="Eventuele opmerkingen van de klant…"></textarea></div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-ghost" onclick="showTab(1)">← Vorige</button>
+            <button class="btn btn-primary" id="save-btn" onclick="saveBon()" style="padding:10px 24px">✓ Werkbon opslaan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="hidden">
+      <div class="topbar"><div><div class="topbar-title">Dashboard</div><div class="topbar-sub">Overzicht omzet en prestaties</div></div></div>
+      <div class="page-content">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="card card-pad">
+          <div class="card-title">👷 Per technicus</div>
+          <table><thead><tr><th>Naam</th><th>Werkbonnen</th><th>Afgerond</th><th style="text-align:right">Omzet incl. btw</th></tr></thead>
+          <tbody id="stats-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TARIEVEN -->
+    <div id="page-tarieven" class="hidden">
+      <div class="topbar">
+        <div><div class="topbar-title">Tarieven</div><div class="topbar-sub">Beheer uurtarieven — zichtbaar voor alle technici</div></div>
+        <button class="btn btn-primary" onclick="openTariefModal()">+ Nieuw tarief</button>
+      </div>
+      <div class="page-content">
+        <div class="tarief-grid" id="tarief-grid"></div>
+        <div class="card"><div class="table-wrap">
+          <table>
+            <thead><tr><th>Naam</th><th>Uurtarief</th><th>Beschrijving</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tarief-tbody"></tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+  <!-- GEBRUIKERS -->
+    <div id="page-gebruikers" class="hidden">
+      <div class="topbar">
+        <div><div class="topbar-title">Gebruikers</div><div class="topbar-sub">Technici uitnodigen en beheren</div></div>
+        <button class="btn btn-primary" onclick="openGebruikerModal()">+ Technicus uitnodigen</button>
+      </div>
+      <div class="page-content">
+        <div class="card"><div class="table-wrap">
+          <table>
+            <thead><tr><th>Naam</th><th>E-mail</th><th>Rol</th><th>Aangemaakt</th><th></th></tr></thead>
+            <tbody id="gebruikers-tbody"></tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div id="drawer-overlay" class="drawer-overlay hidden" onclick="closeDrawer(event)">
+  <div class="drawer slide-in">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title" id="d-bonnummer">—</div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <span class="badge" id="d-badge">—</span>
+          <span id="d-sig-chip" class="hidden" style="font-size:11px;color:var(--teal);font-weight:600">✓ Ondertekend</span>
+        </div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="card card-pad"><div class="card-title">🏢 Klantgegevens</div><div id="d-klant"></div></div>
+    <div id="d-omschr-wrap" class="card card-pad hidden"><div class="card-title">📝 Omschrijving</div><div id="d-omschr" style="font-size:13px;color:var(--muted);line-height:1.6"></div></div>
+    <div class="card card-pad">
+      <div class="card-title">🔧 Werkzaamheden</div>
+      <table><thead><tr>
+        <th style="padding:7px 0;font-size:11px">Omschrijving</th>
+        <th style="padding:7px 0;font-size:11px">Uren</th>
+        <th style="padding:7px 0;font-size:11px">Tarief</th>
+        <th style="padding:7px 0;font-size:11px;text-align:right">Bedrag</th>
+      </tr></thead><tbody id="d-wz"></tbody></table>
+      <div class="totalen-box" style="margin-top:14px">
+        <div class="totalen-row"><span style="color:var(--muted)">Excl. btw</span><span id="d-excl" style="font-family:var(--mono)">—</span></div>
+        <div class="totalen-row"><span style="color:var(--muted)">Btw 21%</span><span id="d-btw" style="font-family:var(--mono)">—</span></div>
+        <div class="totalen-row grand"><span>Totaal incl. btw</span><span id="d-incl">—</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="printWerkbon(currentDrawerBon)">🖨️ PDF / Afdrukken</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="alert('E-mail — binnenkort beschikbaar')">✉ Versturen</button>
+    </div>
+  </div>
+</div>
+
+<!-- TARIEF MODAL -->
+<div id="tarief-modal" class="modal-overlay hidden">
+  <div class="modal fade-in">
+    <div class="modal-title" id="modal-titel">Nieuw tarief aanmaken</div>
+    <input type="hidden" id="modal-id">
+    <div class="form-grid full"><div class="field" style="margin-bottom:14px">
+      <label>Naam tarief *</label>
+      <input type="text" id="modal-naam" placeholder="bv. Herstellingswerk">
+    </div></div>
+    <div class="form-grid">
+      <div class="field"><label>Uurtarief (€) *</label><input type="number" id="modal-tarief" placeholder="85" min="0" step="0.5"></div>
+      <div class="field"><label>Status</label>
+        <select id="modal-actief"><option value="true">Actief</option><option value="false">Inactief</option></select>
+      </div>
+    </div>
+    <div class="form-grid full"><div class="field">
+      <label>Beschrijving (optioneel)</label>
+      <textarea id="modal-desc" placeholder="Korte omschrijving van dit tarief…" style="min-height:64px"></textarea>
+    </div></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeTariefModal()">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveTarief()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const hb=document.getElementById('hamburger');
+  const ov=document.getElementById('sidebar-overlay');
+  sb.classList.toggle('open');
+  hb.classList.toggle('open');
+  ov.classList.toggle('show');
+}
+function closeSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+// Sluit sidebar bij navigeren op mobiel
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      if(window.innerWidth<=900) closeSidebar();
+    });
+  });
+});
+
+window.onerror=function(msg,src,line){alert('JS Error: '+msg+' (lijn '+line+')');return false;};
+const{createClient}=supabase;
+const sb=createClient(
+  'https://dynecuzppyvjftuzqgrc.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5bmVjdXpwcHl2amZ0dXpxZ3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MDQ1MTgsImV4cCI6MjA5NDE4MDUxOH0.wPLxeAruvmNSGKDp_Jz0jw9VuGejq_t3qzobiB6j3hY'
+);
+let currentUser=null,alleWerkbonnen=[],alleTarieven=[],huidigStatus='afgerond',sigData=null,wzTeller=0,bonLocatie=null;
+const fmtEur=n=>`€\u00a0${(+n||0).toFixed(2).replace('.',',')}`;
+const fmtDate=d=>d?new Date(d).toLocaleDateString('nl-BE'):'';
+const fmtDateTime=d=>d?new Date(d).toLocaleString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+const statusLabel={open:'Open',in_uitvoering:'In uitvoering',afgerond:'Afgerond'};
+const statusClass={open:'badge-open',in_uitvoering:'badge-uitvoering',afgerond:'badge-afgerond'};
+function calcTot(wz){const excl=wz.reduce((s,w)=>s+(parseFloat(w.uren)||0)*(parseFloat(w.uurtarief)||0),0);return{excl,btw:excl*.21,incl:excl*1.21};}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value;
+  const ww=document.getElementById('login-ww').value;
+  const errEl=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
+  if(!email||!ww){errEl.textContent='Vul e-mail en wachtwoord in.';errEl.classList.remove('hidden');return;}
+  btn.textContent='Aanmelden…';btn.disabled=true;errEl.classList.add('hidden');
+  const{data,error}=await sb.auth.signInWithPassword({email,password:ww});
+  if(error){errEl.textContent=error.message;errEl.classList.remove('hidden');btn.textContent='Aanmelden';btn.disabled=false;return;}
+  const{data:p}=await sb.from('users').select('*').eq('id',data.user.id).single();
+  currentUser=p||{id:data.user.id,naam:email,email,rol:'technicus'};initApp();
+}
+async function doLogout(){
+  await sb.auth.signOut();currentUser=null;
+  document.getElementById('app-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-btn').textContent='Aanmelden';
+  document.getElementById('login-btn').disabled=false;
+}
+document.getElementById('login-ww').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('login-email').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function initApp(){
+  const isAdmin=currentUser.rol==='admin'||currentUser.rol==='manager';
+  document.getElementById('sb-naam').textContent=currentUser.naam;
+  document.getElementById('sb-rol-txt').textContent=currentUser.rol;
+  if(isAdmin){
+    document.getElementById('nav-dashboard').classList.remove('hidden');
+    document.getElementById('nav-tarieven').classList.remove('hidden');
+    document.getElementById('nav-gebruikers').classList.remove('hidden');
+    document.getElementById('th-technicus').classList.remove('hidden');
+    document.getElementById('wb-title').textContent='Alle werkbonnen';
+    document.getElementById('wb-sub').textContent='Overzicht van alle technici';
+  } else {
+    document.getElementById('wb-title').textContent='Mijn werkbonnen';
+    document.getElementById('wb-sub').textContent='Welkom, '+currentUser.naam;
+  }
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  document.getElementById('f-datum').value=new Date().toISOString().split('T')[0];
+  document.getElementById('f-technicus').value=currentUser.naam;
+  laadTarieven().then(()=>laadWerkbonnen());
+}
+
+async function laadTarieven(){const{data}=await sb.from('tarieven').select('*').order('naam');alleTarieven=data||[];}
+async function renderTarieven(){
+  await laadTarieven();
+  const actief=alleTarieven.filter(t=>t.actief);
+  document.getElementById('tarief-grid').innerHTML=actief.map(t=>`
+    <div class="tarief-kaart">
+      <div class="tarief-kaart-naam">${t.naam}</div>
+      <div class="tarief-kaart-prijs">${fmtEur(t.uurtarief)}<span style="font-size:13px;font-weight:400;color:var(--muted)">/u</span></div>
+      <div class="tarief-kaart-desc">${t.beschrijving||'&nbsp;'}</div>
+      <div class="tarief-kaart-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editTarief('${t.id}')">✏ Bewerken</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('tarief-tbody').innerHTML=alleTarieven.map(t=>`
+    <tr>
+      <td><strong>${t.naam}</strong></td>
+      <td style="font-family:var(--mono)">${fmtEur(t.uurtarief)}/u</td>
+      <td style="color:var(--muted)">${t.beschrijving||'—'}</td>
+      <td><span class="badge ${t.actief?'badge-actief':'badge-inactief'}">${t.actief?'Actief':'Inactief'}</span></td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost btn-sm" onclick="editTarief('${t.id}')" style="margin-right:6px">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="delTarief('${t.id}')">✕</button>
+      </td>
+    </tr>`).join('');
+}
+function openTariefModal(){
+  ['modal-id','modal-naam','modal-tarief','modal-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modal-titel').textContent='Nieuw tarief aanmaken';
+  document.getElementById('modal-actief').value='true';
+  document.getElementById('tarief-modal').classList.remove('hidden');
+}
+function editTarief(id){
+  const t=alleTarieven.find(x=>x.id===id);if(!t)return;
+  document.getElementById('modal-id').value=t.id;
+  document.getElementById('modal-titel').textContent='Tarief bewerken';
+  document.getElementById('modal-naam').value=t.naam;
+  document.getElementById('modal-tarief').value=t.uurtarief;
+  document.getElementById('modal-desc').value=t.beschrijving||'';
+  document.getElementById('modal-actief').value=String(t.actief);
+  document.getElementById('tarief-modal').classList.remove('hidden');
+}
+function closeTariefModal(){document.getElementById('tarief-modal').classList.add('hidden');}
+async function saveTarief(){
+  const id=document.getElementById('modal-id').value;
+  const data={naam:document.getElementById('modal-naam').value,uurtarief:parseFloat(document.getElementById('modal-tarief').value)||0,beschrijving:document.getElementById('modal-desc').value,actief:document.getElementById('modal-actief').value==='true'};
+  if(!data.naam){alert('Vul een naam in.');return;}
+  if(id)await sb.from('tarieven').update(data).eq('id',id);
+  else await sb.from('tarieven').insert(data);
+  closeTariefModal();renderTarieven();
+}
+async function delTarief(id){
+  if(!confirm('Tarief verwijderen?'))return;
+  await sb.from('tarieven').delete().eq('id',id);renderTarieven();
+}
+
+async function laadWerkbonnen(){
+  const isAdmin=currentUser.rol==='admin'||currentUser.rol==='manager';
+  let q=sb.from('werkbonnen').select('*,klant:klanten(*),technicus:users(*),werkzaamheden(*),handtekening:handtekeningen(sig_storage_path)').order('aangemaakt_op',{ascending:false});
+  if(!isAdmin)q=q.eq('technicus_id',currentUser.id);
+  const{data}=await q;alleWerkbonnen=data||[];renderLijst();
+}
+function renderLijst(){
+  const zoek=document.getElementById('zoek-input').value.toLowerCase();
+  const fs=document.getElementById('filter-status').value;
+  const isAdmin=currentUser.rol==='admin'||currentUser.rol==='manager';
+  const gef=alleWerkbonnen.filter(b=>{
+    const mZ=!zoek||b.bonnummer?.toLowerCase().includes(zoek)||b.klant?.bedrijfsnaam?.toLowerCase().includes(zoek);
+    const mS=fs==='alle'||b.status===fs;return mZ&&mS;
+  });
+  document.getElementById('wb-count').textContent=gef.length+' werkbonnen';
+  const tbody=document.getElementById('wb-tbody');
+  if(!gef.length){tbody.innerHTML=`<tr><td colspan="${isAdmin?7:6}" style="text-align:center;color:var(--muted);padding:40px">Geen werkbonnen gevonden</td></tr>`;return;}
+  tbody.innerHTML=gef.map(b=>{
+    const tot=calcTot(b.werkzaamheden||[]);
+    return `<tr class="clickable" onclick="openDrawer('${b.id}')">
+      <td><span style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--actum-blue)">${b.bonnummer||'—'}</span></td>
+      <td><div style="font-weight:600">${b.klant?.bedrijfsnaam||'—'}</div><div style="font-size:12px;color:var(--muted)">${b.klant?.contactpersoon||''}</div></td>
+      <td style="color:var(--muted)">
+        <div>${fmtDate(b.datum)}</div>
+        <div style="font-size:11px;color:var(--faint)">${b.aangemaakt_op?fmtDateTime(b.aangemaakt_op):''}</div>
+      </td>
+      ${isAdmin?`<td>${b.technicus?.naam||'—'}</td>`:''}
+      <td><span class="badge ${statusClass[b.status]}">${statusLabel[b.status]}</span></td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:600">${fmtEur(tot.incl)}</td>
+      <td style="text-align:right">${b.handtekening?'<span style="color:var(--teal);font-size:13px;font-weight:700">✓</span>':''} ${b.latitude?'<span title="'+( b.locatie_naam||b.latitude+","+b.longitude)+'" style="font-size:13px">📍</span>':''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showPage(naam){
+  ['werkbonnen','nieuw','dashboard','tarieven','gebruikers'].forEach(p=>document.getElementById(`page-${p}`).classList.toggle('hidden',p!==naam));
+  ['werkbonnen','dashboard','tarieven','gebruikers'].forEach(id=>{const btn=document.getElementById(`nav-${id}`);if(btn)btn.classList.toggle('active',id===naam);});
+  if(naam==='werkbonnen')laadWerkbonnen();
+  if(naam==='dashboard')renderDashboard();
+  if(naam==='tarieven')renderTarieven();
+  if(naam==='gebruikers')laadGebruikers();
+}
+function showNieuwForm(){
+  resetNieuwForm();showPage('nieuw');showTab(0);setTimeout(initSig,100);
+  bonLocatie=null;
+  // Locatie alvast bepalen op de achtergrond
+  bepaalLocatie();
+}
+function resetNieuwForm(){
+  document.getElementById('f-datum').value=new Date().toISOString().split('T')[0];
+  document.getElementById('f-status').value='open';
+  document.getElementById('f-technicus').value=currentUser.naam;
+  ['f-bedrijf','f-contact','f-email','f-tel','f-adres','f-probleem','f-materialen','f-opmerkingen'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dag-tbody').innerHTML='';dagTeller=0;document.getElementById('btn-add-dag').style.display='';addDagRij();
+  huidigStatus='afgerond';setStatus('afgerond');sigData=null;bonLocatie=null;
+  document.getElementById('sig-status-txt').textContent='Teken hieronder ter bevestiging van de uitgevoerde werken';
+  document.getElementById('locatie-tekst').textContent='Locatie wordt bepaald…';
+  document.getElementById('locatie-detail').classList.add('hidden');
+}
+function showTab(n){
+  [0,1,2].forEach(i=>{document.getElementById(`tab-${i}`).classList.toggle('hidden',i!==n);document.querySelectorAll('.tab-btn')[i].classList.toggle('active',i===n);});
+  if(n===2)setTimeout(initSig,50);
+}
+
+let dagTeller=0;
+const MAX_DAGEN=7;
+
+function addDagRij(){
+  if(dagTeller>=MAX_DAGEN){alert('Maximum 7 dagen per werkbon.');return;}
+  dagTeller++;const id=dagTeller;
+  const opties=alleTarieven.filter(t=>t.actief).map(t=>`<option value="${t.uurtarief}">${t.naam} — ${fmtEur(t.uurtarief)}/u</option>`).join('');
+  const tr=document.createElement('tr');
+  tr.id=`dag-${id}`;
+  tr.innerHTML=`
+    <td style="padding:6px 4px"><input type="date" class="dag-datum" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:130px" onchange="herbereken()"></td>
+    <td style="padding:6px 4px"><input type="text" class="dag-omschr" placeholder="Omschrijving…" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:100%;min-width:120px"></td>
+    <td style="padding:6px 4px;text-align:center"><input type="time" class="dag-start" value="07:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:90px" onchange="herbereken()"></td>
+    <td style="padding:6px 4px;text-align:center"><input type="time" class="dag-stop" value="17:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:90px" onchange="herbereken()"></td>
+    <td style="padding:6px 4px;text-align:center"><input type="number" class="dag-pauze" value="30" min="0" step="15" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:70px;text-align:center" onchange="herbereken()"></td>
+    <td style="padding:6px 4px;text-align:center;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--actum-blue)" class="dag-uren-cel">0,00u</td>
+    <td style="padding:6px 4px">
+      <select class="dag-tarief" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:160px" onchange="herbereken()">
+        <option value="">— Tarief —</option>
+        ${opties}
+        <option value="custom">✏ Aangepast…</option>
+      </select>
+    </td>
+    <td style="padding:6px 4px;text-align:right;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--actum-blue)" class="dag-bedrag-cel">€ 0,00</td>
+    <td style="padding:6px 4px"><button onclick="delDagRij(${id})" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--faint);font-size:14px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--faint)'">✕</button></td>`;
+  
+  // Aangepast tarief
+  tr.querySelector('.dag-tarief').addEventListener('change',function(){
+    if(this.value==='custom'){
+      const inp=document.createElement('input');
+      inp.type='number';inp.min='0';inp.step='0.5';inp.placeholder='€/u';inp.className='dag-tarief-custom';
+      inp.style.cssText='background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;width:100px';
+      inp.onchange=()=>herbereken();
+      this.replaceWith(inp);
+    }
+    herbereken();
+  });
+  
+  // Standaard datum = vandaag
+  tr.querySelector('.dag-datum').value=new Date().toISOString().split('T')[0];
+  
+  document.getElementById('dag-tbody').appendChild(tr);
+  
+  // Verberg knop als max bereikt
+  if(dagTeller>=MAX_DAGEN) document.getElementById('btn-add-dag').style.display='none';
+  herbereken();
+}
+
+function delDagRij(id){
+  document.getElementById(`dag-${id}`).remove();
+  dagTeller--;
+  document.getElementById('btn-add-dag').style.display='';
+  herbereken();
+}
+
+function berekenUren(start,stop,pauzeMin){
+  if(!start||!stop)return 0;
+  const [sh,sm]=start.split(':').map(Number);
+  const [eh,em]=stop.split(':').map(Number);
+  const totalMin=(eh*60+em)-(sh*60+sm)-(pauzeMin||0);
+  return Math.max(0,totalMin/60);
+}
+
+function herbereken(){
+  let totalUren=0,excl=0;
+  document.querySelectorAll('#dag-tbody tr').forEach(tr=>{
+    const start=tr.querySelector('.dag-start')?.value;
+    const stop=tr.querySelector('.dag-stop')?.value;
+    const pauze=parseFloat(tr.querySelector('.dag-pauze')?.value)||0;
+    const uren=berekenUren(start,stop,pauze);
+    totalUren+=uren;
+    
+    const tEl=tr.querySelector('.dag-tarief')||tr.querySelector('.dag-tarief-custom');
+    const tarief=tEl?.tagName==='SELECT'?parseFloat(tEl.value)||0:parseFloat(tEl?.value)||0;
+    const bedrag=uren*tarief;excl+=bedrag;
+    
+    const urenCel=tr.querySelector('.dag-uren-cel');
+    if(urenCel)urenCel.textContent=uren.toFixed(2).replace('.',',')+'u';
+    const bedragCel=tr.querySelector('.dag-bedrag-cel');
+    if(bedragCel)bedragCel.textContent=fmtEur(bedrag);
+  });
+  const btw=excl*.21;
+  document.getElementById('tot-uren').textContent=totalUren.toFixed(2).replace('.',',')+'u';
+  document.getElementById('tot-excl').textContent=fmtEur(excl);
+  document.getElementById('tot-btw').textContent=fmtEur(btw);
+  document.getElementById('tot-incl').textContent=fmtEur(excl+btw);
+}
+
+// Oud (leeg - vervangen door daglijnen)
+function addWzRij(){addDagRij();}
+function delWzRij(id){delDagRij(id);}
+function setStatus(s){
+  huidigStatus=s;
+  ['open','in_uitvoering','afgerond'].forEach(k=>document.getElementById(`sb-${k}`).className=`status-btn${s===k?` sel-${k}`:''}`);
+  document.getElementById('f-status').value=s;
+}
+
+let sigCtx,sigDrawing=false,sigLast=[0,0];
+function initSig(){
+  const c=document.getElementById('sig-canvas');c.width=c.offsetWidth||500;c.height=180;
+  sigCtx=c.getContext('2d');sigCtx.strokeStyle='#1A2332';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';
+  c.onmousedown=e=>{sigDrawing=true;sigLast=sPos(e,c);};
+  c.onmousemove=e=>{if(!sigDrawing)return;sDraw(e,c);};
+  c.onmouseup=()=>{sigDrawing=false;sSave();};c.onmouseleave=()=>{sigDrawing=false;};
+  c.ontouchstart=e=>{e.preventDefault();sigDrawing=true;sigLast=sPos(e.touches[0],c);};
+  c.ontouchmove=e=>{e.preventDefault();if(!sigDrawing)return;sDraw(e.touches[0],c);};
+  c.ontouchend=()=>{sigDrawing=false;sSave();};
+}
+function sPos(e,c){const r=c.getBoundingClientRect();return[(e.clientX-r.left)*(c.width/r.width),(e.clientY-r.top)*(c.height/r.height)];}
+function sDraw(e,c){const[x,y]=sPos(e,c);sigCtx.beginPath();sigCtx.moveTo(...sigLast);sigCtx.lineTo(x,y);sigCtx.stroke();sigLast=[x,y];}
+function sSave(){sigData=document.getElementById('sig-canvas').toDataURL();document.getElementById('sig-status-txt').innerHTML='<span class="sig-ok">✓ Handtekening geplaatst — klant heeft bevestigd</span>';}
+function clearSig(){sigCtx.clearRect(0,0,document.getElementById('sig-canvas').width,180);sigData=null;document.getElementById('sig-status-txt').textContent='Teken hieronder ter bevestiging van de uitgevoerde werken';}
+
+async function saveBon(){
+  const btn=document.getElementById('save-btn');btn.textContent='⟳ Opslaan…';btn.disabled=true;
+  try{
+    let klantId=null;
+    const bedrijf=document.getElementById('f-bedrijf').value;
+    if(bedrijf){
+      const{data:k,error:ke}=await sb.from('klanten').insert({bedrijfsnaam:bedrijf,contactpersoon:document.getElementById('f-contact').value,email:document.getElementById('f-email').value,adres:document.getElementById('f-adres').value,telefoon:document.getElementById('f-tel').value}).select().single();
+      if(ke)throw new Error('Klant: '+ke.message);klantId=k?.id;
+    }
+    const{data:nr,error:ne}=await sb.rpc('next_bonnummer');if(ne)throw new Error('Bonnummer: '+ne.message);
+    const bonData={bonnummer:nr,technicus_id:currentUser.id,klant_id:klantId,datum:document.getElementById('f-datum').value,probleemomschrijving:document.getElementById('f-probleem').value,materialen:document.getElementById('f-materialen').value,opmerkingen_klant:document.getElementById('f-opmerkingen').value,status:huidigStatus};
+    if(bonLocatie){bonData.latitude=bonLocatie.lat;bonData.longitude=bonLocatie.lng;bonData.locatie_naam=bonLocatie.naam||null;}
+    const{data:bon,error:be}=await sb.from('werkbonnen').insert(bonData).select().single();
+    if(be)throw new Error('Werkbon: '+be.message);
+    const wzData=[];
+    document.querySelectorAll('#dag-tbody tr').forEach(tr=>{
+      const datum=tr.querySelector('.dag-datum')?.value;
+      const omschr=tr.querySelector('.dag-omschr')?.value||'';
+      const start=tr.querySelector('.dag-start')?.value;
+      const stop=tr.querySelector('.dag-stop')?.value;
+      const pauze=parseFloat(tr.querySelector('.dag-pauze')?.value)||0;
+      const uren=berekenUren(start,stop,pauze);
+      const tEl=tr.querySelector('.dag-tarief')||tr.querySelector('.dag-tarief-custom');
+      const uurtarief=tEl?.tagName==='SELECT'?parseFloat(tEl.value)||0:parseFloat(tEl?.value)||0;
+      const label=datum?datum+' '+start+'-'+stop+(omschr?' — '+omschr:''):omschr;
+      if(uren>0||omschr)wzData.push({werkbon_id:bon.id,omschrijving:label||'Dag',uren,uurtarief});
+    });
+    if(wzData.length)await sb.from('werkzaamheden').insert(wzData);
+    if(sigData){try{const b64=sigData.split(',')[1];const by=atob(b64);const arr=new Uint8Array(by.length);for(let i=0;i<by.length;i++)arr[i]=by.charCodeAt(i);const blob=new Blob([arr],{type:'image/png'});const pad=`handtekeningen/${bon.id}.png`;await sb.storage.from('werkbon-bestanden').upload(pad,blob,{contentType:'image/png'});await sb.from('handtekeningen').insert({werkbon_id:bon.id,sig_storage_path:pad});}catch(se){console.warn('Sig:',se);}}
+    showPage('werkbonnen');
+  }catch(e){alert('Fout: '+e.message);}
+  btn.textContent='✓ Werkbon opslaan';btn.disabled=false;
+}
+
+let currentDrawerBon=null;
+function openDrawer(id){
+  const bon=alleWerkbonnen.find(b=>b.id===id);if(!bon)return;
+  currentDrawerBon=bon;
+  document.getElementById('d-bonnummer').textContent=bon.bonnummer;
+  const badge=document.getElementById('d-badge');badge.textContent=statusLabel[bon.status];badge.className=`badge ${statusClass[bon.status]}`;
+  const sigChip=document.getElementById('d-sig-chip');
+  if(bon.handtekening)sigChip.classList.remove('hidden');else sigChip.classList.add('hidden');
+  const locStr=bon.locatie_naam?`<div style="font-size:12px;color:var(--actum-blue);margin-top:4px">📍 ${bon.locatie_naam}</div>`:(bon.latitude?`<div style="font-size:12px;color:var(--actum-blue);margin-top:4px">📍 ${bon.latitude?.toFixed(4)}, ${bon.longitude?.toFixed(4)} <a href="https://maps.google.com/?q=${bon.latitude},${bon.longitude}" target="_blank" style="color:var(--actum-blue)">→ Kaart</a></div>`:'');
+  document.getElementById('d-klant').innerHTML=`<div style="font-size:15px;font-weight:700;margin-bottom:4px">${bon.klant?.bedrijfsnaam||'—'}</div><div style="font-size:13px;color:var(--muted)">${bon.klant?.contactpersoon||''}${bon.klant?.adres?' · '+bon.klant.adres:''}</div><div style="font-size:13px;color:var(--muted);margin-top:2px">${fmtDate(bon.datum)} · ${bon.technicus?.naam||''}</div><div style="font-size:12px;color:var(--faint);margin-top:2px">Aangemaakt: ${fmtDateTime(bon.aangemaakt_op)}</div>${locStr}`;
+  if(bon.probleemomschrijving){document.getElementById('d-omschr').textContent=bon.probleemomschrijving;document.getElementById('d-omschr-wrap').classList.remove('hidden');}
+  else document.getElementById('d-omschr-wrap').classList.add('hidden');
+  const wz=bon.werkzaamheden||[];
+  document.getElementById('d-wz').innerHTML=wz.map(w=>`<tr><td style="padding:8px 0;font-size:13px">${w.omschrijving}</td><td style="font-family:var(--mono);font-size:13px">${w.uren}u</td><td style="font-family:var(--mono);font-size:13px">${fmtEur(w.uurtarief)}/u</td><td style="font-family:var(--mono);font-size:13px;text-align:right;font-weight:600">${fmtEur(w.uren*w.uurtarief)}</td></tr>`).join('');
+  const tot=calcTot(wz);
+  document.getElementById('d-excl').textContent=fmtEur(tot.excl);
+  document.getElementById('d-btw').textContent=fmtEur(tot.btw);
+  document.getElementById('d-incl').textContent=fmtEur(tot.incl);
+  document.getElementById('drawer-overlay').classList.remove('hidden');
+}
+function closeDrawer(e){if(!e||e.target===document.getElementById('drawer-overlay'))document.getElementById('drawer-overlay').classList.add('hidden');}
+
+function renderDashboard(){
+  const totaalIncl=alleWerkbonnen.reduce((s,b)=>s+calcTot(b.werkzaamheden||[]).incl,0);
+  const openCount=alleWerkbonnen.filter(b=>b.status==='open').length;
+  const afgerond=alleWerkbonnen.filter(b=>b.status==='afgerond').length;
+  const ondertekend=alleWerkbonnen.filter(b=>b.handtekening).length;
+  document.getElementById('stats-grid').innerHTML=[
+    {label:'Totale omzet',val:fmtEur(totaalIncl),kleur:'var(--actum-blue)'},
+    {label:'Werkbonnen',val:alleWerkbonnen.length},
+    {label:'Open bons',val:openCount,kleur:openCount>0?'var(--amber)':undefined},
+    {label:'Ondertekend',val:ondertekend,kleur:'var(--teal)'},
+  ].map(s=>'<div class="stat-card"><div class="stat-label">'+s.label+'</div><div class="stat-val"'+(s.kleur?' style="color:'+s.kleur+'"':'')+'>'+s.val+'</div></div>').join('');
+  const perTech={};
+  alleWerkbonnen.forEach(b=>{const k=b.technicus?.naam||'—';if(!perTech[k])perTech[k]={count:0,done:0,omzet:0};perTech[k].count++;if(b.status==='afgerond')perTech[k].done++;perTech[k].omzet+=calcTot(b.werkzaamheden||[]).incl;});
+  document.getElementById('stats-tbody').innerHTML=Object.entries(perTech).map(([naam,d])=>`<tr><td style="font-weight:600">${naam}</td><td style="font-family:var(--mono)">${d.count}</td><td><span class="badge badge-afgerond">${d.done}</span></td><td style="text-align:right;font-family:var(--mono);font-weight:600">${fmtEur(d.omzet)}</td></tr>`).join('');
+}
+
+// ── LOCATIE ──────────────────────────────────────────────────
+async function bepaalLocatie(){
+  const statusEl=document.getElementById('locatie-tekst');
+  const detailEl=document.getElementById('locatie-detail');
+  if(!navigator.geolocation){
+    statusEl.innerHTML='<span style="color:var(--red)">Locatie niet beschikbaar op dit apparaat</span>';
+    return;
+  }
+  statusEl.textContent='📍 Locatie bepalen…';
+  navigator.geolocation.getCurrentPosition(
+    async pos=>{
+      bonLocatie={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      // Reverse geocoding via open API
+      try{
+        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${bonLocatie.lat}&lon=${bonLocatie.lng}&format=json`);
+        const d=await r.json();
+        const naam=d.display_name?.split(',').slice(0,3).join(', ')||'Onbekende locatie';
+        bonLocatie.naam=naam;
+        statusEl.innerHTML='<span style="color:var(--teal)">✓ '+naam+'</span>';
+        detailEl.textContent=bonLocatie.lat.toFixed(5)+', '+bonLocatie.lng.toFixed(5);
+        detailEl.classList.remove('hidden');
+      }catch(e){
+        statusEl.innerHTML='<span style="color:var(--teal)">✓ Locatie bepaald</span>';
+        detailEl.textContent=bonLocatie.lat.toFixed(5)+', '+bonLocatie.lng.toFixed(5);
+        detailEl.classList.remove('hidden');
+      }
+    },
+    err=>{
+      bonLocatie=null;
+      statusEl.innerHTML='<span style="color:var(--amber)">⚠ Locatie geweigerd — bon wordt opgeslagen zonder locatie</span>';
+    },
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+
+// ── PDF PRINT ────────────────────────────────────────────────
+function printWerkbon(bon){
+  if(!bon)return;
+  const wz=bon.werkzaamheden||[];
+  const tot=calcTot(wz);
+  const wzRijen=wz.map(w=>`
+    <tr>
+      <td>${w.omschrijving}</td>
+      <td style="text-align:right">${(+w.uren).toFixed(2)} u</td>
+      <td style="text-align:right">€ ${(+w.uurtarief).toFixed(2)}/u</td>
+      <td style="text-align:right">€ ${((+w.uren)*(+w.uurtarief)).toFixed(2)}</td>
+    </tr>`).join('');
+
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Werkbon ${bon.bonnummer}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;font-size:13px;color:#1A2332;padding:32px;max-width:800px;margin:0 auto;}
+  @media print{body{padding:16px;} .no-print{display:none!important;}}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #2A4A5E;}
+  .logo-wrap{background:#3D6E8A;border-radius:8px;padding:12px 16px;}
+  .logo-wrap img{height:50px;}
+  .bon-info{text-align:right;}
+  .bon-nr{font-size:22px;font-weight:700;color:#2A4A5E;}
+  .bon-datum{font-size:12px;color:#6B7280;margin-top:4px;}
+  .bon-status{display:inline-block;background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-top:6px;}
+  .section{margin-bottom:22px;}
+  .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9BA3AE;margin-bottom:10px;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .info-block{}
+  .info-label{font-size:11px;color:#9BA3AE;margin-bottom:3px;}
+  .info-val{font-size:13px;font-weight:500;}
+  .desc-box{background:#F7F8FA;border-radius:8px;padding:12px 14px;font-size:13px;color:#5A6475;line-height:1.6;}
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9BA3AE;padding:8px 12px;text-align:left;border-bottom:2px solid #E4E7EB;background:#F7F8FA;}
+  td{padding:10px 12px;border-bottom:1px solid #E4E7EB;font-size:13px;}
+  .totalen{margin-top:12px;background:#EEF4F7;border-radius:8px;padding:14px 16px;}
+  .tot-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
+  .tot-grand{font-weight:700;font-size:16px;border-top:2px solid #3D6E8A;margin-top:8px;padding-top:10px;color:#2A4A5E;}
+  .sig-section{margin-top:24px;padding-top:20px;border-top:1px solid #E4E7EB;}
+  .sig-box{border:1px solid #CDD2D8;border-radius:8px;height:80px;margin-top:8px;background:#fff;}
+  .footer{margin-top:32px;padding-top:16px;border-top:1px solid #E4E7EB;font-size:10px;color:#9BA3AE;text-align:center;}
+  .print-btn{position:fixed;top:20px;right:20px;background:#2A4A5E;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">🖨️ Afdrukken / PDF</button>
+
+<div class="header">
+  <div class="logo-wrap">
+    <img src="data:image/png;base64,${document.querySelector('.sb-logo-img').src.split(',')[1]}" alt="Actum">
+  </div>
+  <div class="bon-info">
+    <div class="bon-nr">${bon.bonnummer}</div>
+    <div class="bon-datum">Datum: ${fmtDate(bon.datum)}</div>
+    <div class="bon-datum">Aangemaakt: ${fmtDateTime(bon.aangemaakt_op)}</div>
+    <div class="bon-status">${statusLabel[bon.status]}</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Klant & Technicus</div>
+  <div class="info-grid">
+    <div class="info-block">
+      <div class="info-label">Klant</div>
+      <div class="info-val">${bon.klant?.bedrijfsnaam||'—'}</div>
+      ${bon.klant?.contactpersoon?`<div style="font-size:12px;color:#6B7280;margin-top:2px">${bon.klant.contactpersoon}</div>`:''}
+      ${bon.klant?.adres?`<div style="font-size:12px;color:#6B7280">${bon.klant.adres}</div>`:''}
+      ${bon.klant?.email?`<div style="font-size:12px;color:#6B7280">${bon.klant.email}</div>`:''}
+      ${bon.klant?.telefoon?`<div style="font-size:12px;color:#6B7280">${bon.klant.telefoon}</div>`:''}
+    </div>
+    <div class="info-block">
+      <div class="info-label">Technicus</div>
+      <div class="info-val">${bon.technicus?.naam||'—'}</div>
+      ${bon.technicus?.email?`<div style="font-size:12px;color:#6B7280">${bon.technicus.email}</div>`:''}
+      ${bon.locatie_naam?`<div style="font-size:12px;color:#3D6E8A;margin-top:6px">📍 ${bon.locatie_naam}</div>`:''}
+    </div>
+  </div>
+</div>
+
+${bon.probleemomschrijving?`
+<div class="section">
+  <div class="section-title">Probleemomschrijving</div>
+  <div class="desc-box">${bon.probleemomschrijving}</div>
+</div>`:''}
+
+<div class="section">
+  <div class="section-title">Werkzaamheden</div>
+  <table>
+    <thead><tr>
+      <th>Omschrijving</th>
+      <th style="text-align:right">Uren</th>
+      <th style="text-align:right">Tarief/u</th>
+      <th style="text-align:right">Bedrag</th>
+    </tr></thead>
+    <tbody>${wzRijen||'<tr><td colspan="4" style="color:#9BA3AE;text-align:center">Geen werkzaamheden</td></tr>'}</tbody>
+  </table>
+  <div class="totalen">
+    <div class="tot-row"><span style="color:#6B7280">Subtotaal excl. btw</span><span>€ ${tot.excl.toFixed(2)}</span></div>
+    <div class="tot-row"><span style="color:#6B7280">Btw 21%</span><span>€ ${tot.btw.toFixed(2)}</span></div>
+    <div class="tot-row tot-grand"><span>Totaal incl. btw</span><span>€ ${tot.incl.toFixed(2)}</span></div>
+  </div>
+</div>
+
+${bon.materialen?`
+<div class="section">
+  <div class="section-title">Gebruikte materialen</div>
+  <div class="desc-box">${bon.materialen}</div>
+</div>`:''}
+
+<div class="sig-section">
+  <div class="section-title">Handtekening klant</div>
+  ${bon.handtekening?'<div style="font-size:13px;color:#065F46;font-weight:600">✓ Digitaal ondertekend op '+fmtDateTime(bon.handtekening.ondertekend_op||bon.aangemaakt_op)+'</div>':'<div class="sig-box"></div>'}
+</div>
+
+${bon.opmerkingen_klant?`
+<div class="section" style="margin-top:20px">
+  <div class="section-title">Opmerkingen klant</div>
+  <div class="desc-box">${bon.opmerkingen_klant}</div>
+</div>`:''}
+
+<div class="footer">
+  Actum Industrial Services — Werkbon ${bon.bonnummer} — Gegenereerd op ${fmtDateTime(new Date().toISOString())}
+</div>
+</body>
+</html>`);
+  win.document.close();
+}
+
+// ── GEBRUIKERS ──────────────────────────────────────────────
+async function laadGebruikers(){
+  const{data}=await sb.from('users').select('*').order('naam');
+  const rolBadge={technicus:'badge-uitvoering',manager:'badge-open',admin:'badge-afgerond'};
+  const rolLabel={technicus:'Technicus',manager:'Manager',admin:'Admin'};
+  document.getElementById('gebruikers-tbody').innerHTML=(data||[]).map(u=>`
+    <tr>
+      <td><strong>${u.naam}</strong></td>
+      <td style="color:var(--muted)">${u.email}</td>
+      <td><span class="badge ${rolBadge[u.rol]||'badge-uitvoering'}">${rolLabel[u.rol]||u.rol}</span></td>
+      <td style="color:var(--muted);font-size:12px">${u.aangemaakt_op?new Date(u.aangemaakt_op).toLocaleDateString('nl-BE'):''}</td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost btn-sm" onclick="editGebruiker('${u.id}')">✏ Bewerken</button>
+        ${u.id!==currentUser.id?`<button class="btn btn-danger btn-sm" onclick="delGebruiker('${u.id}','${u.naam}')" style="margin-left:6px">✕</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function openGebruikerModal(){
+  ['geb-modal-id','geb-naam','geb-email','geb-ww'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('geb-modal-titel').textContent='Technicus uitnodigen';
+  document.getElementById('geb-rol').value='technicus';
+  document.getElementById('gebruiker-modal').classList.remove('hidden');
+}
+
+function editGebruiker(id){
+  sb.from('users').select('*').eq('id',id).single().then(({data:u})=>{
+    if(!u)return;
+    document.getElementById('geb-modal-id').value=u.id;
+    document.getElementById('geb-modal-titel').textContent='Gebruiker bewerken';
+    document.getElementById('geb-naam').value=u.naam;
+    document.getElementById('geb-email').value=u.email;
+    document.getElementById('geb-rol').value=u.rol;
+    document.getElementById('geb-ww').value='';
+    document.getElementById('gebruiker-modal').classList.remove('hidden');
+  });
+}
+
+function closeGebruikerModal(){document.getElementById('gebruiker-modal').classList.add('hidden');}
+
+async function saveGebruiker(){
+  const id=document.getElementById('geb-modal-id').value;
+  const naam=document.getElementById('geb-naam').value;
+  const email=document.getElementById('geb-email').value;
+  const rol=document.getElementById('geb-rol').value;
+  const ww=document.getElementById('geb-ww').value;
+  if(!naam||!email){alert('Naam en e-mail zijn verplicht.');return;}
+  const btn=document.querySelector('#gebruiker-modal .btn-primary');
+  btn.textContent='⟳ Bezig…';btn.disabled=true;
+  try{
+    if(id){
+      // Bestaande gebruiker bijwerken
+      const updates={naam,rol};
+      const{error}=await sb.from('users').update(updates).eq('id',id);
+      if(error)throw new Error(error.message);
+    } else {
+      // Nieuwe gebruiker aanmaken via Supabase Auth Admin API
+      if(!ww||ww.length<8){throw new Error('Wachtwoord moet minstens 8 tekens zijn.');}
+      // Gebruik de Edge Function of directe signup
+      const{data,error}=await sb.auth.signUp({
+        email,password:ww,
+        options:{data:{naam}}
+      });
+      if(error)throw new Error(error.message);
+      if(data?.user){
+        // Profiel aanmaken
+        const{error:pe}=await sb.from('users').upsert({
+          id:data.user.id,naam,email,rol
+        });
+        if(pe)throw new Error('Profiel: '+pe.message);
+      }
+    }
+    closeGebruikerModal();
+    laadGebruikers();
+    alert(id?'Gebruiker bijgewerkt!':naam+' is aangemaakt. Ze kunnen nu inloggen met hun e-mail en wachtwoord.');
+  }catch(e){alert('Fout: '+e.message);}
+  btn.textContent='Aanmaken';btn.disabled=false;
+}
+
+async function delGebruiker(id,naam){
+  if(!confirm(naam+' verwijderen?'))return;
+  await sb.from('users').delete().eq('id',id);
+  laadGebruikers();
+}
+
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){const{data:p}=await sb.from('users').select('*').eq('id',session.user.id).single();if(p){currentUser=p;initApp();}}
+})();
+</script>
+<!-- GEBRUIKER MODAL -->
+<div id="gebruiker-modal" class="modal-overlay hidden">
+  <div class="modal fade-in">
+    <div class="modal-title" id="geb-modal-titel">Technicus uitnodigen</div>
+    <input type="hidden" id="geb-modal-id">
+    <div class="form-grid full"><div class="field" style="margin-bottom:12px">
+      <label>Naam *</label>
+      <input type="text" id="geb-naam" placeholder="Jan Janssen">
+    </div></div>
+    <div class="form-grid full"><div class="field" style="margin-bottom:12px">
+      <label>E-mailadres *</label>
+      <input type="email" id="geb-email" placeholder="jan@actum.be">
+    </div></div>
+    <div class="form-grid">
+      <div class="field"><label>Rol</label>
+        <select id="geb-rol">
+          <option value="technicus">Technicus</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="field"><label>Tijdelijk wachtwoord *</label>
+        <input type="text" id="geb-ww" placeholder="MinsteNs8Tekens!">
+      </div>
+    </div>
+    <div style="background:var(--actum-light);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--actum-dark);margin-top:4px">
+      ℹ️ De technicus kan inloggen met dit wachtwoord en het daarna zelf wijzigen.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeGebruikerModal()">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveGebruiker()">Aanmaken</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
